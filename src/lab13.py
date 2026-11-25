@@ -4,6 +4,7 @@ Không cần khoá API. Điền các chỗ ghi VIẾT Ở ĐÂY (đánh dấu TO
 Bản gốc chưa sửa nằm ở lab13_starter.py.
 """
 import math
+from statistics import NormalDist
 import pandas as pd
 
 # Bảng giá GIẢ ĐỊNH của lab (không phải giá thật của nhà cung cấp nào)
@@ -182,11 +183,60 @@ def chay_bao_cao(runs, reqs):
               f'tổng={tong:,.0f}, CPS={cps:,.0f} ({cps / BASELINE:.2f}x baseline)')
 
 
+# ---------- Nhiệm vụ D1 · Cỡ mẫu pilot và E1 · Ba chỉ số ----------
+def co_mau(p1, p2, alpha=0.05, power=0.80):
+    """Cỡ mẫu mỗi nhóm khi so hai tỉ lệ (kiểm định hai phía)."""
+    nd = NormalDist()
+    za = nd.inv_cdf(1 - alpha / 2)
+    zb = nd.inv_cdf(power)
+    pb = (p1 + p2) / 2
+    num = (za * math.sqrt(2 * pb * (1 - pb)) + zb * math.sqrt(p1 * (1 - p1) + p2 * (1 - p2))) ** 2
+    return math.ceil(num / (p2 - p1) ** 2)
+
+
+def chay_d1_va_e1(reqs, p1=0.70, alpha=0.05, power=0.80, icc=0.02):
+    print('\nD1 · Cỡ mẫu pilot (baseline=0,70; alpha=0,05; power=0,80; ICC=0,02)')
+    n_req = co_mau(p1, p1 + 0.05, alpha, power)
+    de_75 = 1 + (75 - 1) * icc
+    n_staff_75 = math.ceil(n_req * de_75)
+    so_nguoi_moi_nhom = math.ceil(n_staff_75 / 75)
+    max_20_staff = int(20 / icc)
+    max_6_depot = int(6 / icc)
+    n_6pp = co_mau(p1, p1 + 0.06, alpha, power)
+    # 20*m / (1 + (m - 1)*icc) >= n_6pp  =>  m*(20 - n_6pp*icc) >= n_6pp*(1 - icc)
+    m_min_6pp = math.ceil(n_6pp * (1 - icc) / (20 - n_6pp * icc))
+    de_6pp = 1 + (m_min_6pp - 1) * icc
+
+    print(f'a) Theo yêu cầu (+5 điểm): {n_req:,d} yêu cầu/nhóm')
+    print(f'b) Theo nhân viên (m=75): DE={de_75:.2f}, n={n_staff_75:,d}/nhóm -> {so_nguoi_moi_nhom} người/nhóm (tổng {2 * so_nguoi_moi_nhom} > 40: không đủ)')
+    print(f'c) 20 nhân viên/nhóm: n_hiệu_dụng tối đa = {max_20_staff:,d} < {n_req:,d} (không đạt +5 điểm)')
+    print(f'd) 6 depot/nhóm: n_hiệu_dụng tối đa = {max_6_depot:,d} (không đạt; chỉ 6 cụm < 20)')
+    print(f'e) Mức chênh 6 điểm (n={n_6pp:,d}/nhóm), 20 nhân viên/nhóm: m >= {m_min_6pp} yêu cầu/người (DE={de_6pp:.2f})')
+
+    try:
+        from statsmodels.stats.proportion import proportion_effectsize
+        from statsmodels.stats.power import NormalIndPower
+        es_5pp = proportion_effectsize(p1 + 0.05, p1)
+        pwr_5pp = NormalIndPower().power(es_5pp, nobs1=n_6pp, alpha=alpha, ratio=1.0)
+        print(f'   Power thực nếu chọn n={n_6pp} mà chênh thật chỉ 5 điểm: {pwr_5pp:.2f}')
+    except ImportError:
+        pass
+
+    print('\nE1 · Ba chỉ số tính thử trên dữ liệu chạy thử (không đối chứng)')
+    chinh = ((reqs['dong_trong_24h'] == 1) & (reqs['mo_lai_trong_7_ngay'] == 0)).mean()
+    xem = reqs[reqs['duoc_xem_lai'] == 1]
+    bo_qua = xem['quyet_dinh_xem_lai'].isin(['sua', 'bo']).mean()
+    an_toan = (reqs['mo_lai_trong_7_ngay'] == 1).mean()
+    scope_reqs = reqs[reqs['loai'].isin(['noi_dia', 'hang_nang'])]
+    an_toan_scope = (scope_reqs['mo_lai_trong_7_ngay'] == 1).mean()
+    print(f'Chính (24h & không mở lại 7 ngày): {chinh:.2%}')
+    print(f'Dùng (bỏ qua gợi ý sua+bo):        {bo_qua:.2%}')
+    print(f'An toàn (mở lại trong 7 ngày):     {an_toan:.2%} (phạm vi noi_dia+hang_nang: {an_toan_scope:.2%})')
+
+
 if __name__ == '__main__':
     runs = pd.read_csv('logix_runs.csv')
     reqs = pd.read_csv('logix_requests.csv', keep_default_na=False)
     kiem_tra_dap_an_biet_truoc()
     chay_bao_cao(runs, reqs)
-    # TODO CP4 · Nhiệm vụ D: cỡ mẫu.
-    #   from statsmodels.stats.proportion import proportion_effectsize
-    #   from statsmodels.stats.power import NormalIndPower
+    chay_d1_va_e1(reqs)
