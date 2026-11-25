@@ -40,9 +40,10 @@ Tất cả event đều gắn `trace_id` (kèm `request_id`) để nối trực 
 
 ## E2 · Rủi ro kinh tế
 
-*(Chờ N2 đối chiếu và điền số chính thức từ bảng độ nhạy trong `report/team/bang_chi_phi.md`; ít nhất hai dòng, nhớ gắn nhãn `simulated` cho các con số lấy từ cột `_simulated`.)*
+Số lấy từ bảng độ nhạy trong `report/team/bang_chi_phi.md`. Con số phụ thuộc cột `_simulated` gắn nhãn `simulated`.
 
 | Rủi ro | Tác động đã tính | Dấu hiệu theo dõi | Hành động | Người phụ trách |
 | --- | --- | --- | --- | --- |
-| ... | ... | ... | ... | ... |
-| ... | ... | ... | ... | ... |
+| Số ca làm lại tăng gấp đôi | CPS lên 6.787 đ (+51,8%) — `simulated` (B1) | Tỉ lệ làm lại theo tuần (event `staff_rework_completed`) tăng rõ so với đợt chạy thử | Thu hẹp pilot về `noi_dia`; rà 20 trace làm lại/tuần | PM trợ lý hoàn phí |
+| Tỉ lệ xem lại tăng gấp đôi / phải xem lại 100% kéo dài | Xem lại ×2 → CPS 6.292 đ (+40,7%) `simulated`; xem lại 100% `noi_dia`+`hang_nang` → 11.743–12.415 đ ≈ 0,98–1,03× baseline 12.000 đ (B4, `simulated`) | % yêu cầu được xem lại còn > 50% cuối bước rollout 0,25; hoặc `staff_review_decision` tỉ lệ `sua`+`bo` không giảm | Giảm xem lại theo bậc khi tỉ lệ sửa+bỏ < 15%; không mở rộng bước rollout | Trưởng nhóm CSKH |
+| Lương nhân viên tăng 25% | CPS lên 5.506 đ (+23,1%) — một phần `simulated` (B1) | Chi phí phút nhân viên thực tế > 2.000 đ/phút trong 2 tuần | Giới hạn tối đa 2 lần chạy; ưu tiên `noi_dia` | PM trợ lý hoàn phí |
