@@ -14,8 +14,12 @@ Nhóm: T100 · Lớp: L3B
 | 6 · Pilot plan | Chia theo staff 20+20; n/arm=859; DE≈6,96; MDE 6 điểm (đánh đổi power ~0,64 ở 5 điểm); phạm vi noi_dia+hang_nang; ≥3 luật dừng; quyết định 2027-01-05 | Xong, có bằng chứng | Người gắn nhãn 2 (giữ hồ sơ) |
 | 7 · Rủi ro kinh tế | Làm lại ×2 → +51,8% (6.787 đ, simulated); xem lại ×2 / 100% → CPS gần hoặc vượt 12.000 đ (B4, simulated); lương +25% → +23,1% | Giả lập | Người kiểm số |
 
-**Đề xuất:** *(chưa chốt — chờ cả nhóm chọn một trong: Go · Go có điều kiện · No-go)*
+**Điều kiện trước và trong pilot:**
 
-- [ ] Go
-- [ ] Go có điều kiện — điều kiện gợi ý (nếu nhóm chọn hướng này): (1) sửa khoá chống trùng / đối soát sổ cái (ca 7, 20) trước ngày bắt đầu — Kỹ sư trưởng agent; (2) Giám đốc vận hành ký chấp nhận MDE 6 điểm (power ~0,64 ở mức 5 điểm); (3) bật đủ event có `trace_id`, thay phút simulated bằng phút đo thật sau tuần 1 — PM trợ lý hoàn phí; (4) có kế hoạch giảm xem lại theo bậc vì xem lại 100% thì mất lợi thế (B4) — Trưởng nhóm CSKH
-- [ ] No-go — việc phải làm để quay lại cổng: …
+1. Trước ngày bắt đầu pilot (chốt quyết định 2027-01-05), Kỹ sư trưởng agent hoàn tất khoá chống hoàn trùng, đối soát `refund_ledger_write` và kiểm tra rollback; ngưỡng lỗi hoàn trùng là 0 ca.
+2. Trước khi phân nhóm, Giám đốc vận hành ký chấp nhận thiết kế 20 nhân viên mỗi nhánh, MDE 6 điểm và power khoảng 0,64 nếu tác động thật chỉ là 5 điểm; nếu yêu cầu phát hiện 5 điểm thì phải thiết kế lại cỡ mẫu trước khi chạy.
+3. PM trợ lý hoàn phí bật đủ event có `trace_id` và thay phút `simulated` bằng thời gian đo thực tế từ tuần đầu. Bắt đầu ở `noi_dia`; chỉ mở `hang_nang` theo rollout nếu CPS không quá 8.000 đ trong 2 tuần liên tiếp và không kích hoạt luật dừng an toàn.
+4. Trưởng nhóm CSKH theo dõi tỷ lệ xem lại/bỏ qua hằng tuần và triển khai giảm xem lại theo bậc; nếu tỷ lệ bỏ qua gợi ý vượt 40% trong 1 tuần thì phỏng vấn 5 nhân viên trong 3 ngày, không chuyển bước rollout khi chưa xử lý nguyên nhân.
+5. Giám đốc vận hành dừng pilot nếu tỷ lệ mở lại của nhóm trợ lý cao hơn đối chứng ít nhất 2 điểm phần trăm hoặc vượt 6%, hay có ca hoàn trùng theo luật dừng trong `pilot_plan.yaml`; không mở rộng khi chưa điều tra và khắc phục.
+
+**Đề xuất: Go có điều kiện** — chạy pilot theo rollout đã định trong phạm vi `noi_dia` + `hang_nang`; không mở rộng nếu chưa đạt các điều kiện trên.

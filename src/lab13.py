@@ -5,6 +5,9 @@ Bản gốc chưa sửa nằm ở lab13_starter.py.
 """
 import math
 import pandas as pd
+from statistics import NormalDist
+from statsmodels.stats.power import NormalIndPower
+from statsmodels.stats.proportion import proportion_effectsize
 
 # Bảng giá GIẢ ĐỊNH của lab (không phải giá thật của nhà cung cấp nào)
 GIA_VAO = 26        # đồng cho 1.000 token đầu vào
@@ -182,11 +185,70 @@ def chay_bao_cao(runs, reqs):
               f'tổng={tong:,.0f}, CPS={cps:,.0f} ({cps / BASELINE:.2f}x baseline)')
 
 
+def co_mau(p1, p2, alpha=0.05, power=0.8):
+    """Cỡ mẫu mỗi nhánh để so sánh hai tỷ lệ độc lập, làm tròn lên."""
+    za = NormalDist().inv_cdf(1 - alpha / 2)
+    zb = NormalDist().inv_cdf(power)
+    p_bar = (p1 + p2) / 2
+    tu_so = za * math.sqrt(2 * p_bar * (1 - p_bar))
+    tu_so += zb * math.sqrt(p1 * (1 - p1) + p2 * (1 - p2))
+    return math.ceil(tu_so ** 2 / (p2 - p1) ** 2)
+
+
+def chay_cp4(reqs, baseline=0.70, alpha=0.05, target_power=0.80, icc=0.02):
+    """In cỡ mẫu, hiệu ứng cụm và thông tin pilot cần ghi vào kế hoạch."""
+    n_5_diem = co_mau(baseline, baseline + 0.05, alpha, target_power)
+    n_6_diem = co_mau(baseline, baseline + 0.06, alpha, target_power)
+
+    de_nhan_vien = 1 + (75 - 1) * icc
+    n_nhan_vien = math.ceil(n_5_diem * de_nhan_vien)
+    nguoi_can_moi_nhanh = math.ceil(n_nhan_vien / 75)
+    hieu_dung_20_staff = 20 / icc
+    hieu_dung_6_depot = 6 / icc
+
+    # Tìm số yêu cầu/cụm nhỏ nhất để 20 cụm mỗi nhánh đạt n hiệu dụng cho MDE 6 điểm.
+    so_cum = 20
+    m = math.ceil((n_6_diem * (1 - icc)) / (so_cum - n_6_diem * icc))
+    design_effect = 1 + (m - 1) * icc
+    n_hieu_dung = so_cum * m / design_effect
+
+    power_5_diem_voi_859 = NormalIndPower().power(
+        effect_size=proportion_effectsize(baseline, baseline + 0.05),
+        nobs1=859,
+        alpha=alpha,
+        ratio=1,
+        alternative='two-sided',
+    )
+
+    mo_lai_toan_mau = reqs['mo_lai_trong_7_ngay'].astype(float).mean()
+    pilot_reqs = reqs[reqs['loai'].isin(['noi_dia', 'hang_nang'])]
+    mo_lai_pilot = pilot_reqs['mo_lai_trong_7_ngay'].astype(float).mean()
+
+    print('\nD1 · Cỡ mẫu và thiết kế cụm')
+    print(f'a) Theo yêu cầu, MDE 5 điểm: {n_5_diem:,} yêu cầu mỗi nhóm')
+    print(f'b) Theo nhân viên (75 yêu cầu/người): DE={de_nhan_vien:.2f}; '
+          f'{n_nhan_vien:,} yêu cầu/nhóm, khoảng {nguoi_can_moi_nhanh} nhân viên/nhóm '
+          f'({2 * nguoi_can_moi_nhanh} tổng, không đủ 40 người)')
+    print(f'c) 20 nhân viên/nhóm: c/ICC={hieu_dung_20_staff:,.0f} yêu cầu hiệu dụng '
+          f'< {n_5_diem:,}; không đủ cho MDE 5 điểm')
+    print(f'd) 6 depot/nhóm: c/ICC={hieu_dung_6_depot:,.0f} yêu cầu hiệu dụng; '
+          'chỉ 6 cụm/nhóm, dưới ngưỡng 20 cụm')
+    print(f'e) MDE 6 điểm: {n_6_diem:,}/nhóm độc lập; với 20 nhân viên/nhóm cần '
+          f'm≥{m} yêu cầu/người (DE={design_effect:.2f}, n hiệu dụng={n_hieu_dung:.0f})')
+    print(f'   Với 859/nhóm, power khi hiệu ứng thật chỉ 5 điểm: {power_5_diem_voi_859:.2f}')
+    print('\nD2 · Phương án đề xuất: phân nhóm ngẫu nhiên theo staff, 20 treatment + 20 control')
+    print('1. Đối chứng chạy đồng thời: có, cùng tuần và cùng depot.')
+    print('2. Phân bổ: bốc thăm bằng code, seed ghi trước, phân tầng theo depot.')
+    print('3. Spillover: có nguy cơ chia sẻ câu trả lời; giới hạn quyền theo tài khoản và log theo staff_id.')
+    print('4. Viết trước: chốt chỉ số chính, ngưỡng dừng và ngày quyết định trước pilot.')
+    print('5. Số cụm: 20 nhân viên mỗi nhánh; chấp nhận MDE 6 điểm thay vì 5 điểm.')
+    print(f'Tỉ lệ mở lại 7 ngày hiện tại: toàn mẫu={mo_lai_toan_mau:.2%}; '
+          f'noi_dia+hang_nang={mo_lai_pilot:.2%}.')
+
+
 if __name__ == '__main__':
     runs = pd.read_csv('logix_runs.csv')
     reqs = pd.read_csv('logix_requests.csv', keep_default_na=False)
     kiem_tra_dap_an_biet_truoc()
     chay_bao_cao(runs, reqs)
-    # TODO CP4 · Nhiệm vụ D: cỡ mẫu.
-    #   from statsmodels.stats.proportion import proportion_effectsize
-    #   from statsmodels.stats.power import NormalIndPower
+    chay_cp4(reqs)
