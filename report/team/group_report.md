@@ -6,7 +6,7 @@ Báo cáo ngắn (≤ 2 trang). Số liệu chi tiết nằm trong các file h�
 
 - Tên nhóm: T100
 - Lớp: L3B
-- Thành viên: xem `TEAM.md` (Đào Đức Duy — N1, Phạm Minh Đức — N2, Bùi Ngọc Hùng — N3, Trần Cảnh Hưng — N4)
+- Thành viên: xem `TEAM.md` (Đào Đức Duy, Phạm Minh Đức, Bùi Ngọc Hùng, Trần Cảnh Hưng)
 
 ## 2. Mục tiêu và cách tiếp cận
 
@@ -24,8 +24,8 @@ Nhóm xây dựng bộ **hồ sơ launch v0** cho trợ lý hoàn phí của Log
 - **Kinh tế (có nhãn `simulated`):** CPS toàn mẫu **4.472 đ** (`simulated`), gấp **16,28×** hoá đơn token+tool **274,7 đ/yêu cầu** (đo từ trace); giờ nhân viên chiếm **92,5%** (làm lại 51,8%, xem lại 40,7%). So công bằng cả hệ thống (gồm 222 ca không thành công): **5.865 đ/yêu cầu = 0,49×** mức nhân viên tự làm 12.000 đ (`simulated`).
 - **Thu hẹp phạm vi & độ nhạy:** Loại `quoc_te` (**22.515 đ = 1,88×**, thành công 27,3%, `ok` giảm 30,0% → 11,4% → 2,2%) và `doi_tac` (**10.215 đ = 0,85×**). Trong phạm vi `noi_dia + hang_nang`, kể cả cộng chi phí cố định vẫn là **4.599 đ (0,38×)** ở 45.000 yc/tháng hoặc **5.784 đ (0,48×)** ở nửa tải (`simulated`). Giới hạn **2 lần chạy** rẻ nhất cho cả hệ thống (**6.901.220 đ**, `simulated`). Nếu phải xem lại 100% thì CPS lên **11.743–12.415 đ (0,98–1,03×, `simulated`)**, mất lợi thế kinh tế.
 - **Chỉ số đợt chạy thử (không đối chứng):** Chính **82,83%** (994/1.200), bỏ qua gợi ý **27,12%** (48/177), mở lại 7 ngày **4,25%** (51/1.200); trong phạm vi pilot đạt lần lượt **92,26%**, **21,09%** và **3,97%**.
-- **Đề xuất cuối ([ho_so_launch_v0.md](ho_so_launch_v0.md)):** **Go có điều kiện** cho pilot `noi_dia + hang_nang` (tối đa 2 lần chạy) với 4 điều kiện có người phụ trách và ngày kiểm tra cụ thể (sửa chống hoàn trùng/sổ cái, ký chấp nhận MDE 6 điểm, thay phút `simulated` bằng phút đo thật sau tuần 1, lộ trình giảm xem lại theo bậc).
-- **Kết quả duyệt chéo Gate 2a:** *(nhóm cập nhật sau phiên duyệt chéo 17:00 và đính kèm phiếu chấm tại [phieu_cham.md](phieu_cham.md)).*
+- **Đề xuất cuối ([ho_so_launch_v0.md](ho_so_launch_v0.md)):** **Go có điều kiện** cho pilot theo rollout có kiểm soát trong phạm vi `noi_dia + hang_nang`. Hồ sơ đề xuất bắt đầu với `noi_dia`, chỉ mở `hang_nang` nếu CPS không quá 8.000đ trong 2 tuần liên tiếp và không kích hoạt luật dừng an toàn; kèm các điều kiện về chống hoàn trùng, chấp nhận MDE 6 điểm, event có `trace_id`, đo thời gian thực và giảm review theo bậc. Đây là đề xuất cho pilot, không phải phê duyệt mở rộng.
+- **Kết quả duyệt chéo Gate 2a:** Chưa có kết quả phiên duyệt chéo trong repo tại thời điểm lập báo cáo; nhóm sẽ cập nhật điểm, nhận xét và câu trả lời sau phiên vào [phieu_cham.md](phieu_cham.md), không suy đoán điểm trước.
 
 ## 5. Khó khăn và cách xử lý
 
@@ -34,7 +34,13 @@ Nhóm xây dựng bộ **hồ sơ launch v0** cho trợ lý hoàn phí của Log
 
 ## 6. Tổng hợp đóng góp
 
-Chi tiết vai trò, phần việc và bằng chứng commit của từng thành viên nằm trong [TEAM.md](../../TEAM.md) và các file báo cáo cá nhân `report/team/<MSSV>_<HoTen>.md`.
+| Thành viên | Vai trò và đóng góp chính |
+| --- | --- |
+| Đào Đức Duy | Người viết code: triển khai mô hình chi phí A1–A4, độ nhạy B1–B4 và duy trì script `src/lab13.py`. |
+| Phạm Minh Đức | Người kiểm số: đối chiếu độc lập kết quả A/B, hoàn thiện bảng chi phí và kiểm tra phân tích kinh tế. |
+| Bùi Ngọc Hùng | Người gắn nhãn 1: gắn nhãn lỗi độc lập; tính/đối chiếu chỉ số, thiết kế event tracking và ngưỡng an toàn. |
+| Trần Cảnh Hưng | Người gắn nhãn 2 kiêm giữ hồ sơ: gắn nhãn lỗi độc lập; tổng hợp kế hoạch pilot, hồ sơ launch và rủi ro kinh tế. |
+
 
 ## 7. Hạn chế và hướng cải thiện
 
