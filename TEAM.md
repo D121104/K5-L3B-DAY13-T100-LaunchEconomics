@@ -2,19 +2,19 @@
 
 ## Thông tin nhóm
 
-- Tên nhóm:
+- Tên nhóm: T100
 - Lớp: L3A hoặc L3B
-- Repo nhóm: `K5-L3A-DAY13-TenNhom-LaunchEconomics` (xem [SUBMISSION.md](SUBMISSION.md))
+- Repo nhóm: `K5-L3B-DAY13-T100-LaunchEconomics` (xem [SUBMISSION.md](SUBMISSION.md))
 - URL repo, nhánh nộp, commit chốt:
 
 ## Thành viên
 
 | STT | Họ tên | MSSV | Email | GitHub | Vai trò |
 | --: | ------ | ---- | ----- | ------ | ------- |
-|   1 |        |      |       |        |         |
-|   2 |        |      |       |        |         |
-|   3 |        |      |       |        |         |
-|   4 |        |      |       |        |         |
+|   1 |   Đào Đức Duy     |  2A202603900    |   26ai.duydd4@vinuni.edu.vn    |   D121104     |    Người viết code     |
+|   2 |   Phạm Minh Đức     |   2A202603758   |   26ai.ducpm@vinuni.edu.vn    |   ducpham13     |    Người kiểm số     |
+|   3 |   Bùi Ngọc Hùng     |   2A202603770   |   26ai.hungbn@vinuni.edu.vn    |    Ngochung1772k4    |   Người gán nhãn 1      |
+|   4 |   Trần Cảnh Hưng     |  2A202603759    |   26ai.hungtc@vinuni.edu.vn    |    danialtranz    |    Người gán nhãn 2, kiếm giữ hồ sơ     |
 
 Bốn vai của lab:
 
