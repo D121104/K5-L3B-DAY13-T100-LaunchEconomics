@@ -18,8 +18,8 @@ Nhóm: T100 · Lớp: L3B
 
 1. Trước ngày bắt đầu pilot (chốt quyết định 2027-01-05), Kỹ sư trưởng agent hoàn tất khoá chống hoàn trùng, đối soát `refund_ledger_write` và kiểm tra rollback; ngưỡng lỗi hoàn trùng là 0 ca.
 2. Trước khi phân nhóm, Giám đốc vận hành ký chấp nhận thiết kế 20 nhân viên mỗi nhánh, MDE 6 điểm và power khoảng 0,64 nếu tác động thật chỉ là 5 điểm; nếu yêu cầu phát hiện 5 điểm thì phải thiết kế lại cỡ mẫu trước khi chạy.
-3. PM trợ lý hoàn phí bật đủ event có `trace_id` và thay phút `simulated` bằng thời gian đo thực tế từ tuần đầu. Bắt đầu ở `noi_dia`; chỉ mở `hang_nang` theo rollout nếu CPS không quá 8.000 đ trong 2 tuần liên tiếp và không kích hoạt luật dừng an toàn.
+3. PM trợ lý hoàn phí bật đủ event có `trace_id` và thay phút `simulated` bằng thời gian đo thực tế từ tuần đầu. Mở dần 4 → 10 → 20 nhân viên treatment; bắt đầu ở `noi_dia`, chỉ mở `hang_nang` nếu CPS biến đổi (không gồm fixed 40 triệu/tháng) không quá 8.000 đ trong 2 tuần liên tiếp và không kích hoạt luật dừng an toàn.
 4. Trưởng nhóm CSKH theo dõi tỷ lệ xem lại/bỏ qua hằng tuần và triển khai giảm xem lại theo bậc; nếu tỷ lệ bỏ qua gợi ý vượt 40% trong 1 tuần thì phỏng vấn 5 nhân viên trong 3 ngày, không chuyển bước rollout khi chưa xử lý nguyên nhân.
-5. Giám đốc vận hành dừng pilot nếu tỷ lệ mở lại của nhóm trợ lý cao hơn đối chứng ít nhất 2 điểm phần trăm hoặc vượt 6%, hay có ca hoàn trùng theo luật dừng trong `pilot_plan.yaml`; không mở rộng khi chưa điều tra và khắc phục.
+5. Giám đốc vận hành dừng pilot nếu trong lần kiểm tra hằng ngày, cohort đã đủ 7 ngày có tỷ lệ mở lại >6%, hoặc có bất kỳ giao dịch hoàn trùng / báo đã hoàn nhưng sổ cái không ghi thành công. Chỉ áp dụng ngưỡng mở lại cao hơn đối chứng ≥2 điểm từ bước 10 nhân viên; chỉ đánh giá chỉ số chính ở bước 20+20. Không mở rộng khi chưa điều tra và khắc phục.
 
 **Đề xuất: Go có điều kiện** — chạy pilot theo rollout đã định trong phạm vi `noi_dia` + `hang_nang`; không mở rộng nếu chưa đạt các điều kiện trên.

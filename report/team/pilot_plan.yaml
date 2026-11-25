@@ -21,7 +21,13 @@
 #
 # Tỉ lệ mo_lai_trong_7_ngay hiện tại và ngưỡng an toàn đã chọn:
 #   Toàn mẫu 4,25% (51/1.200); phạm vi noi_dia+hang_nang 3,97% (39/982).
-#   Không đặt trần tuyệt đối 3% (sẽ dừng ngay tuần 1). Dùng chênh vs đối chứng ≥ +2 điểm hoặc trần tuyệt đối 6%.
+# D3 · Rollout và luật dừng:
+#   Mở trợ lý theo 3 bước: 4 → 10 → 20 nhân viên treatment; giữ 20 nhân viên control cùng thời gian.
+#   Chỉ dùng chỉ số chính để ra quyết định ở bước 20. Luật chênh lệch mở lại ≥2 điểm phần trăm
+#   chỉ áp dụng từ bước 10 để tránh còi giả ở bước 4 (slide ước tính 56/1.000 so với 8/1.000).
+#   Ở mọi bước, dừng ngay nếu mở lại >6%, có hoàn trùng, hoặc báo khách đã hoàn nhưng sổ cái không ghi thành công.
+#   Ngưỡng CPS 8.000 đ là chi phí biến đổi (không gồm 40 triệu chi phí cố định); cố định được báo riêng
+#   vì phân bổ trên lưu lượng nhỏ sẽ làm méo quyết định ở các bước rollout sớm.
 
 pilot:
   owner: "Giám đốc vận hành LogiX-VN"
@@ -30,7 +36,16 @@ pilot:
     unit: "staff"
     control_share: 0.5
     randomized: true
-  rollout: [0.10, 0.25, 0.50]
+  rollout:
+    - treatment_staff: 4
+      control_staff: 20
+      gate: "Kiểm tra sự cố an toàn tuyệt đối; chưa dùng chênh lệch mở lại ≥2 điểm hoặc chỉ số chính để quyết định"
+    - treatment_staff: 10
+      control_staff: 20
+      gate: "Bắt đầu dùng ngưỡng chênh lệch mở lại ≥2 điểm so với đối chứng; tiếp tục kiểm tra sự cố tuyệt đối"
+    - treatment_staff: 20
+      control_staff: 20
+      gate: "Đủ 20 cụm mỗi nhánh; bắt đầu đánh giá chỉ số chính theo kế hoạch"
   primary_metric:
     name: dong_trong_24h_khong_mo_lai_7_ngay
     baseline: 0.70
@@ -45,10 +60,11 @@ pilot:
     spillover_risk: "Rủi ro chia sẻ câu trả lời trong depot; giảm bằng quyền truy cập theo tài khoản và log lượt mở trợ lý theo staff_id"
     predeclared: "Chỉ số chính, MDE 6 điểm, luật dừng và ngày quyết định chốt trước ngày bắt đầu"
   stop_rules:
-    - "NẾU mở lại 7 ngày của nhóm trợ lý cao hơn đối chứng ≥ 2 điểm hoặc vượt 6%, hoặc có ≥ 1 ca hoàn trùng TRONG 3 ngày liên tiếp THÌ Giám đốc vận hành tắt trợ lý trong 30 phút KHÔNG THÌ không được sang bước rollout tiếp"
-    - "NẾU chi phí mỗi việc thành công > 8.000 đ TRONG 2 tuần liên tiếp THÌ PM thu hẹp về noi_dia và giới hạn 2 lần chạy KHÔNG THÌ không được mở hang_nang"
+    - "NẾU trong lần kiểm tra an toàn hằng ngày, tỉ lệ mở lại của cohort đã đủ 7 ngày > 6%, hoặc có bất kỳ lệnh hoàn trùng / thông báo đã hoàn nhưng refund_ledger_write không thành công TRONG bất kỳ giao dịch nào THÌ Giám đốc vận hành tắt trợ lý trong 30 phút KHÔNG THÌ không được sang bước rollout tiếp"
+    - "NẾU từ bước 10 nhân viên treatment trở đi, tỉ lệ mở lại cao hơn control ≥ 2 điểm phần trăm TRONG một kỳ interim look sau khi cohort đủ cửa sổ theo dõi 7 ngày THÌ Giám đốc vận hành dừng mở rộng và rà soát trong 1 ngày KHÔNG THÌ không được chuyển sang bước kế tiếp"
+    - "NẾU CPS biến đổi (không gồm 40 triệu chi phí cố định) > 8.000 đ trong 2 tuần liên tiếp THÌ PM thu hẹp về noi_dia và giới hạn 2 lần chạy KHÔNG THÌ không được mở hang_nang"
     - "NẾU tỉ lệ bỏ qua gợi ý > 40% TRONG 1 tuần THÌ Trưởng nhóm CSKH phỏng vấn 5 nhân viên trong 3 ngày KHÔNG THÌ không được chuyển bước rollout"
-  interim_looks: "chỉ kiểm tra chỉ số an toàn"
+  interim_looks: "Mỗi bước kiểm tra chỉ số an toàn tuyệt đối; chênh lệch mở lại ≥2 điểm áp dụng từ 10 nhân viên treatment; chỉ số chính chỉ được đánh giá ở bước 20 treatment + 20 control"
   rollback: "Giám đốc vận hành bấm cờ tắt, hiệu lực 30 phút; khách được phục vụ bằng luồng nhân viên tự làm"
   decision_date: "2027-01-05"
   simulated_inputs:

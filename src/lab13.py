@@ -196,7 +196,7 @@ def co_mau(p1, p2, alpha=0.05, power=0.8):
     return math.ceil(tu_so ** 2 / (p2 - p1) ** 2)
 
 
-def chay_cp4(reqs, baseline=0.70, alpha=0.05, target_power=0.80, icc=0.02):
+def chay_cp4(runs, reqs, baseline=0.70, alpha=0.05, target_power=0.80, icc=0.02):
     """In cỡ mẫu, hiệu ứng cụm và thông tin pilot cần ghi vào kế hoạch."""
     n_5_diem = co_mau(baseline, baseline + 0.05, alpha, target_power)
     n_6_diem = co_mau(baseline, baseline + 0.06, alpha, target_power)
@@ -224,6 +224,8 @@ def chay_cp4(reqs, baseline=0.70, alpha=0.05, target_power=0.80, icc=0.02):
     mo_lai_toan_mau = reqs['mo_lai_trong_7_ngay'].astype(float).mean()
     pilot_reqs = reqs[reqs['loai'].isin(['noi_dia', 'hang_nang'])]
     mo_lai_pilot = pilot_reqs['mo_lai_trong_7_ngay'].astype(float).mean()
+    pilot_cps = mo_hinh(runs, pilot_reqs)['cps']
+    ty_le_viec_thanh_cong = int((pilot_reqs['ket_qua'] == 'thanh_cong').sum()) / len(reqs)
 
     print('\nD1 · Cỡ mẫu và thiết kế cụm')
     print(f'a) Theo yêu cầu, MDE 5 điểm: {n_5_diem:,} yêu cầu mỗi nhóm')
@@ -245,6 +247,18 @@ def chay_cp4(reqs, baseline=0.70, alpha=0.05, target_power=0.80, icc=0.02):
     print('5. Số cụm: 20 nhân viên mỗi nhánh; chấp nhận MDE 6 điểm thay vì 5 điểm.')
     print(f'Tỉ lệ mở lại 7 ngày hiện tại: toàn mẫu={mo_lai_toan_mau:.2%}; '
           f'noi_dia+hang_nang={mo_lai_pilot:.2%}.')
+    print('\nD3 · Rollout 4 → 10 → 20 nhân viên treatment (giữ 20 control)')
+    print('Chỉ số chính chỉ đánh giá ở bước 20; ngưỡng mở lại cao hơn control ≥2 điểm '
+          'chỉ áp dụng từ bước 10 (ước tính còi giả: 56/1.000 ở bước 4, 8/1.000 ở bước 10).')
+    print('Ở mọi bước dừng ngay nếu cohort đủ 7 ngày có tỉ lệ mở lại >6%, hoặc có hoàn trùng / '
+          'báo đã hoàn nhưng sổ cái không ghi thành công trong bất kỳ giao dịch nào.')
+    print('Ngưỡng CPS 8.000 đ dùng cho chi phí biến đổi, chưa gồm fixed 40 triệu/tháng.')
+    for staff_treatment in (4, 10, 20):
+        monthly_successes = 45000 * (staff_treatment / 40) * ty_le_viec_thanh_cong
+        fixed_per_success = 40_000_000 / monthly_successes
+        print(f'{staff_treatment} treatment staff: ~{monthly_successes:,.0f} việc thành công/tháng, '
+              f'fixed phân bổ ~{fixed_per_success:,.0f} đ/việc, tổng gồm CPS biến đổi ~'
+              f'{fixed_per_success + pilot_cps:,.0f} đ/việc.')
 
 
 if __name__ == '__main__':
@@ -252,4 +266,4 @@ if __name__ == '__main__':
     reqs = pd.read_csv('logix_requests.csv', keep_default_na=False)
     kiem_tra_dap_an_biet_truoc()
     chay_bao_cao(runs, reqs)
-    chay_cp4(reqs)
+    chay_cp4(runs, reqs)
