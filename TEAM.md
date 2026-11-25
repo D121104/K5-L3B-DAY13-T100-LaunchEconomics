@@ -44,11 +44,11 @@ Ví dụ: `report/team/2A202603770_BuiNgocHung.md`.
 ### Đóng góp cụ thể
 
 - Viết 3 hàm A1 đạt 3/3 phép thử đáp án biết trước (`1,20 · 1,25 · 1,25`), xây dựng `mo_hinh()` và báo cáo A2–A4, B1–B4 trong `src/lab13.py`.
-- Tạo bảng phân công công việc trong `report/team/phan_cong_cong_viec.md` và cập nhật bảng thành viên trong `TEAM.md`.
+- Phân định vai trò trong nhóm và cập nhật bảng thành viên trong `TEAM.md`.
 
 ### Bằng chứng
 
-- PR #1 (`c83d17a`), PR #5 (`d2d0559`), `src/lab13.py`, `report/team/phan_cong_cong_viec.md`.
+- PR #1 (`c83d17a`), PR #5 (`d2d0559`), `src/lab13.py`, `TEAM.md`.
 
 ## PhamMinhDuc-2A202603758
 
