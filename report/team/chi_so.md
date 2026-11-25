@@ -19,6 +19,7 @@ Tất cả event đều gắn `trace_id` (kèm `request_id`) để nối trực 
 | Event | Ai tạo | Thuộc tính chính | Thời điểm |
 | --- | --- | --- | --- |
 | `refund_request_created` | Hệ thống tiếp nhận yêu cầu | `request_id`, `loai`, `so_tien_vnd`, `depot`, `staff_id`, `arm` (`treatment`/`control`), `created_at`, `trace_id` | Khi khách gửi yêu cầu hoàn phí |
+| `input_validation_failed` | Hệ thống tiếp nhận / trợ lý | `request_id`, `error_code` (`sai_ma_van_don`/`thieu_so_tk`/`sai_danh_muc`), `input_type`, `trace_id` | Khi đầu vào của khách không hợp lệ (bắt lỗi do người dùng như ca 1, 9) |
 | `agent_run_completed` | Trợ lý hoàn phí | `request_id`, `run_id`, `attempt`, `tokens_in`, `tokens_out`, `tool_calls`, `status` (`ok`/`loi`), `price_table_version`, `trace_id` | Sau mỗi lần chạy của trợ lý, kể cả lần lỗi |
 | `agent_suggestion_shown` | Giao diện CSKH | `request_id`, `staff_id`, `so_tien_de_xuat`, `shown_at`, `trace_id` | Khi gợi ý của trợ lý hiện trên màn hình nhân viên |
 | `staff_review_decision` | Nhân viên CSKH | `request_id`, `staff_id`, `quyet_dinh` (`giu`/`sua`/`bo`), `phut_xem_lai_thuc_te`, `trace_id` | Khi nhân viên bấm giữ, sửa hoặc bỏ gợi ý (thay `phut_xem_lai_simulated`) |
@@ -37,6 +38,7 @@ Tất cả event đều gắn `trace_id` (kèm `request_id`) để nối trực 
 - **Chỉ số an toàn — Tỉ lệ lỗi lọt đến khách (mở lại trong 7 ngày):** đếm số `request_id` có `ticket_reopened` (`within_7d == true`) chia tổng số `request_id` từ `refund_request_created` theo từng `arm`.
 - **Chỉ số an toàn (tự đề xuất) — Tỉ lệ đơn hoàn sai tiền & hoàn trùng:** từ `audit_sample_checked`, đếm số ca `lech_tien == true` chia tổng số ca được kiểm tra mẫu hằng tuần; đồng thời đối soát `refund_ledger_write` (số `request_id` có >1 bản ghi `ket_qua == "ok"`, ngưỡng dừng = 0 ca).
 - **Theo dõi chi phí thực tế trong pilot (thay thế số `simulated`):** kết hợp `agent_run_completed` (`tokens_in`, `tokens_out`, `tool_calls`), `staff_review_decision` (`phut_xem_lai_thuc_te`) và `staff_rework_completed` (`phut_lam_lai_thuc_te`).
+- **Phát hiện lỗi đầu vào từ người dùng (khớp ca 9 trong `bang_loi.md`):** đếm `input_validation_failed` theo ngày chia tổng `refund_request_created` (cảnh báo khi > 2%).
 
 ## E2 · Rủi ro kinh tế
 
