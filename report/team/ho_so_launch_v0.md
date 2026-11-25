@@ -14,9 +14,12 @@ Nhóm: T100 · Lớp: L3B
 | 6 · Pilot plan | Chia ngẫu nhiên theo nhân viên 20+20 (phân tầng depot); n/nhánh = 859, DE = 6,96, MDE 6 điểm (đánh đổi: power ~0,64 ở mức 5 điểm); phạm vi `noi_dia`+`hang_nang`; 3 luật dừng đủ 4 vế; ngày quyết định 2027-01-05 | Xong, có bằng chứng | Giám đốc vận hành LogiX-VN |
 | 7 · Rủi ro kinh tế | Làm lại ×2 → 6.787 đ (+51,8%, `simulated`); xem lại 100% `noi_dia`+`hang_nang` → 11.743–12.415 đ (0,98–1,03×, mất lợi thế, B4, `simulated`); lương +25% → 5.506 đ (+23,1%, `simulated`); khối lượng giảm nửa làm cố định tăng lên 2.370 đ/việc | Giả lập | PM trợ lý hoàn phí |
 
-**Đề xuất:** **Go có điều kiện** *(cho kế hoạch pilot phạm vi `noi_dia` + `hang_nang`, giới hạn tối đa 2 lần chạy — chi phí hệ thống thấp nhất 6.901.220 đ, `simulated`)*
+**Điều kiện trước và trong pilot:**
 
-- **Điều kiện 1 (An toàn sổ cái & chống hoàn trùng):** Hoàn tất khoá chống trùng (`idempotency_key`) và đối soát tự động sổ cái 0 ca lệch (ca 7, 20); xóa cache bảng giá cũ kèm `price_table_version` (ca 17) — **Người phụ trách:** Kỹ sư trưởng agent — **Ngày kiểm tra:** `2026-11-30` (trước khi bật rollout 0,10).
-- **Điều kiện 2 (Chấp nhận đánh đổi cỡ mẫu & luật dừng):** Ký chấp nhận đánh đổi MDE 6 điểm (power ~0,64 nếu tác động thật chỉ 5 điểm) và phê duyệt 3 luật dừng viết trước cùng cơ chế tắt trong 30 phút — **Người phụ trách:** Giám đốc vận hành LogiX-VN — **Ngày kiểm tra:** `2026-11-30`.
-- **Điều kiện 3 (Đo dữ liệu thật thay `simulated`):** Bật đủ 11 event có `trace_id` (đặc biệt `staff_review_decision`, `staff_rework_completed`, `audit_sample_checked`) và thay toàn bộ phút `simulated` bằng phút đo thực tế để tính lại CPS — **Người phụ trách:** PM trợ lý hoàn phí — **Ngày kiểm tra:** `2026-12-08` (cuối tuần 1).
-- **Điều kiện 4 (Lộ trình giảm tỉ lệ xem lại):** Áp dụng giảm tỉ lệ xem lại theo bậc khi tỉ lệ `sua + bo < 15%` để tránh kịch bản xem lại 100% làm CPS tiệm cận/vượt 12.000 đ (B4) — **Người phụ trách:** Trưởng nhóm CSKH — **Ngày kiểm tra:** `2026-12-15` (cuối bước rollout 0,25).
+1. Trước ngày bắt đầu pilot (chốt quyết định 2027-01-05), Kỹ sư trưởng agent hoàn tất khoá chống hoàn trùng, đối soát `refund_ledger_write` và kiểm tra rollback; ngưỡng lỗi hoàn trùng là 0 ca.
+2. Trước khi phân nhóm, Giám đốc vận hành ký chấp nhận thiết kế 20 nhân viên mỗi nhánh, MDE 6 điểm và power khoảng 0,64 nếu tác động thật chỉ là 5 điểm; nếu yêu cầu phát hiện 5 điểm thì phải thiết kế lại cỡ mẫu trước khi chạy.
+3. PM trợ lý hoàn phí bật đủ event có `trace_id` và thay phút `simulated` bằng thời gian đo thực tế từ tuần đầu. Bắt đầu ở `noi_dia`; chỉ mở `hang_nang` theo rollout nếu CPS không quá 8.000 đ trong 2 tuần liên tiếp và không kích hoạt luật dừng an toàn.
+4. Trưởng nhóm CSKH theo dõi tỷ lệ xem lại/bỏ qua hằng tuần và triển khai giảm xem lại theo bậc; nếu tỷ lệ bỏ qua gợi ý vượt 40% trong 1 tuần thì phỏng vấn 5 nhân viên trong 3 ngày, không chuyển bước rollout khi chưa xử lý nguyên nhân.
+5. Giám đốc vận hành dừng pilot nếu tỷ lệ mở lại của nhóm trợ lý cao hơn đối chứng ít nhất 2 điểm phần trăm hoặc vượt 6%, hay có ca hoàn trùng theo luật dừng trong `pilot_plan.yaml`; không mở rộng khi chưa điều tra và khắc phục.
+
+**Đề xuất: Go có điều kiện** — chạy pilot theo rollout đã định trong phạm vi `noi_dia` + `hang_nang`; không mở rộng nếu chưa đạt các điều kiện trên.

@@ -6,6 +6,9 @@ Bản gốc chưa sửa nằm ở lab13_starter.py.
 import math
 from statistics import NormalDist
 import pandas as pd
+from statistics import NormalDist
+from statsmodels.stats.power import NormalIndPower
+from statsmodels.stats.proportion import proportion_effectsize
 
 # Bảng giá GIẢ ĐỊNH của lab (không phải giá thật của nhà cung cấp nào)
 GIA_VAO = 26        # đồng cho 1.000 token đầu vào
@@ -183,55 +186,65 @@ def chay_bao_cao(runs, reqs):
               f'tổng={tong:,.0f}, CPS={cps:,.0f} ({cps / BASELINE:.2f}x baseline)')
 
 
-# ---------- Nhiệm vụ D1 · Cỡ mẫu pilot và E1 · Ba chỉ số ----------
-def co_mau(p1, p2, alpha=0.05, power=0.80):
-    """Cỡ mẫu mỗi nhóm khi so hai tỉ lệ (kiểm định hai phía)."""
-    nd = NormalDist()
-    za = nd.inv_cdf(1 - alpha / 2)
-    zb = nd.inv_cdf(power)
-    pb = (p1 + p2) / 2
-    num = (za * math.sqrt(2 * pb * (1 - pb)) + zb * math.sqrt(p1 * (1 - p1) + p2 * (1 - p2))) ** 2
-    return math.ceil(num / (p2 - p1) ** 2)
+def co_mau(p1, p2, alpha=0.05, power=0.8):
+    """Cỡ mẫu mỗi nhánh để so sánh hai tỷ lệ độc lập, làm tròn lên."""
+    za = NormalDist().inv_cdf(1 - alpha / 2)
+    zb = NormalDist().inv_cdf(power)
+    p_bar = (p1 + p2) / 2
+    tu_so = za * math.sqrt(2 * p_bar * (1 - p_bar))
+    tu_so += zb * math.sqrt(p1 * (1 - p1) + p2 * (1 - p2))
+    return math.ceil(tu_so ** 2 / (p2 - p1) ** 2)
 
 
-def chay_d1_va_e1(reqs, p1=0.70, alpha=0.05, power=0.80, icc=0.02):
-    print('\nD1 · Cỡ mẫu pilot (baseline=0,70; alpha=0,05; power=0,80; ICC=0,02)')
-    n_req = co_mau(p1, p1 + 0.05, alpha, power)
-    de_75 = 1 + (75 - 1) * icc
-    n_staff_75 = math.ceil(n_req * de_75)
-    so_nguoi_moi_nhom = math.ceil(n_staff_75 / 75)
-    max_20_staff = int(20 / icc)
-    max_6_depot = int(6 / icc)
-    n_6pp = co_mau(p1, p1 + 0.06, alpha, power)
-    # 20*m / (1 + (m - 1)*icc) >= n_6pp  =>  m*(20 - n_6pp*icc) >= n_6pp*(1 - icc)
-    m_min_6pp = math.ceil(n_6pp * (1 - icc) / (20 - n_6pp * icc))
-    de_6pp = 1 + (m_min_6pp - 1) * icc
+def chay_cp4(reqs, baseline=0.70, alpha=0.05, target_power=0.80, icc=0.02):
+    """In cỡ mẫu, hiệu ứng cụm và thông tin pilot cần ghi vào kế hoạch."""
+    n_5_diem = co_mau(baseline, baseline + 0.05, alpha, target_power)
+    n_6_diem = co_mau(baseline, baseline + 0.06, alpha, target_power)
 
-    print(f'a) Theo yêu cầu (+5 điểm): {n_req:,d} yêu cầu/nhóm')
-    print(f'b) Theo nhân viên (m=75): DE={de_75:.2f}, n={n_staff_75:,d}/nhóm -> {so_nguoi_moi_nhom} người/nhóm (tổng {2 * so_nguoi_moi_nhom} > 40: không đủ)')
-    print(f'c) 20 nhân viên/nhóm: n_hiệu_dụng tối đa = {max_20_staff:,d} < {n_req:,d} (không đạt +5 điểm)')
-    print(f'd) 6 depot/nhóm: n_hiệu_dụng tối đa = {max_6_depot:,d} (không đạt; chỉ 6 cụm < 20)')
-    print(f'e) Mức chênh 6 điểm (n={n_6pp:,d}/nhóm), 20 nhân viên/nhóm: m >= {m_min_6pp} yêu cầu/người (DE={de_6pp:.2f})')
+    de_nhan_vien = 1 + (75 - 1) * icc
+    n_nhan_vien = math.ceil(n_5_diem * de_nhan_vien)
+    nguoi_can_moi_nhanh = math.ceil(n_nhan_vien / 75)
+    hieu_dung_20_staff = 20 / icc
+    hieu_dung_6_depot = 6 / icc
 
-    try:
-        from statsmodels.stats.proportion import proportion_effectsize
-        from statsmodels.stats.power import NormalIndPower
-        es_5pp = proportion_effectsize(p1 + 0.05, p1)
-        pwr_5pp = NormalIndPower().power(es_5pp, nobs1=n_6pp, alpha=alpha, ratio=1.0)
-        print(f'   Power thực nếu chọn n={n_6pp} mà chênh thật chỉ 5 điểm: {pwr_5pp:.2f}')
-    except ImportError:
-        pass
+    # Tìm số yêu cầu/cụm nhỏ nhất để 20 cụm mỗi nhánh đạt n hiệu dụng cho MDE 6 điểm.
+    so_cum = 20
+    m = math.ceil((n_6_diem * (1 - icc)) / (so_cum - n_6_diem * icc))
+    design_effect = 1 + (m - 1) * icc
+    n_hieu_dung = so_cum * m / design_effect
 
-    print('\nE1 · Ba chỉ số tính thử trên dữ liệu chạy thử (không đối chứng)')
-    chinh = ((reqs['dong_trong_24h'] == 1) & (reqs['mo_lai_trong_7_ngay'] == 0)).mean()
-    xem = reqs[reqs['duoc_xem_lai'] == 1]
-    bo_qua = xem['quyet_dinh_xem_lai'].isin(['sua', 'bo']).mean()
-    an_toan = (reqs['mo_lai_trong_7_ngay'] == 1).mean()
-    scope_reqs = reqs[reqs['loai'].isin(['noi_dia', 'hang_nang'])]
-    an_toan_scope = (scope_reqs['mo_lai_trong_7_ngay'] == 1).mean()
-    print(f'Chính (24h & không mở lại 7 ngày): {chinh:.2%}')
-    print(f'Dùng (bỏ qua gợi ý sua+bo):        {bo_qua:.2%}')
-    print(f'An toàn (mở lại trong 7 ngày):     {an_toan:.2%} (phạm vi noi_dia+hang_nang: {an_toan_scope:.2%})')
+    power_5_diem_voi_859 = NormalIndPower().power(
+        effect_size=proportion_effectsize(baseline, baseline + 0.05),
+        nobs1=859,
+        alpha=alpha,
+        ratio=1,
+        alternative='two-sided',
+    )
+
+    mo_lai_toan_mau = reqs['mo_lai_trong_7_ngay'].astype(float).mean()
+    pilot_reqs = reqs[reqs['loai'].isin(['noi_dia', 'hang_nang'])]
+    mo_lai_pilot = pilot_reqs['mo_lai_trong_7_ngay'].astype(float).mean()
+
+    print('\nD1 · Cỡ mẫu và thiết kế cụm')
+    print(f'a) Theo yêu cầu, MDE 5 điểm: {n_5_diem:,} yêu cầu mỗi nhóm')
+    print(f'b) Theo nhân viên (75 yêu cầu/người): DE={de_nhan_vien:.2f}; '
+          f'{n_nhan_vien:,} yêu cầu/nhóm, khoảng {nguoi_can_moi_nhanh} nhân viên/nhóm '
+          f'({2 * nguoi_can_moi_nhanh} tổng, không đủ 40 người)')
+    print(f'c) 20 nhân viên/nhóm: c/ICC={hieu_dung_20_staff:,.0f} yêu cầu hiệu dụng '
+          f'< {n_5_diem:,}; không đủ cho MDE 5 điểm')
+    print(f'd) 6 depot/nhóm: c/ICC={hieu_dung_6_depot:,.0f} yêu cầu hiệu dụng; '
+          'chỉ 6 cụm/nhóm, dưới ngưỡng 20 cụm')
+    print(f'e) MDE 6 điểm: {n_6_diem:,}/nhóm độc lập; với 20 nhân viên/nhóm cần '
+          f'm≥{m} yêu cầu/người (DE={design_effect:.2f}, n hiệu dụng={n_hieu_dung:.0f})')
+    print(f'   Với 859/nhóm, power khi hiệu ứng thật chỉ 5 điểm: {power_5_diem_voi_859:.2f}')
+    print('\nD2 · Phương án đề xuất: phân nhóm ngẫu nhiên theo staff, 20 treatment + 20 control')
+    print('1. Đối chứng chạy đồng thời: có, cùng tuần và cùng depot.')
+    print('2. Phân bổ: bốc thăm bằng code, seed ghi trước, phân tầng theo depot.')
+    print('3. Spillover: có nguy cơ chia sẻ câu trả lời; giới hạn quyền theo tài khoản và log theo staff_id.')
+    print('4. Viết trước: chốt chỉ số chính, ngưỡng dừng và ngày quyết định trước pilot.')
+    print('5. Số cụm: 20 nhân viên mỗi nhánh; chấp nhận MDE 6 điểm thay vì 5 điểm.')
+    print(f'Tỉ lệ mở lại 7 ngày hiện tại: toàn mẫu={mo_lai_toan_mau:.2%}; '
+          f'noi_dia+hang_nang={mo_lai_pilot:.2%}.')
 
 
 if __name__ == '__main__':
@@ -239,4 +252,4 @@ if __name__ == '__main__':
     reqs = pd.read_csv('logix_requests.csv', keep_default_na=False)
     kiem_tra_dap_an_biet_truoc()
     chay_bao_cao(runs, reqs)
-    chay_d1_va_e1(reqs)
+    chay_cp4(reqs)
